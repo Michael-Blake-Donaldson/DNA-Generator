@@ -5,112 +5,134 @@ const DNAVisualizer = ({ formData }) => {
   const containerRef = useRef();
 
   useEffect(() => {
-    let sketch = (p) => {
-      let traits = formData.traits;
-      let emotion = formData.emotion;
-      let colorBase = getColorFromInterest(formData.interests);
-      let bgColor = getBackgroundFromEmotion(emotion);
+    const sketch = (p) => {
+      let angle = 0;
+      let symbols = formData.symbols || [];
+      let colors = formData.colors || ["#ffffff", "#888888", "#000000"];
+      let emotionColor = getEmotionColor(formData.emotion);
+      let structure = getStructure(formData.motif);
+      let motionSpeed = getMotionSpeed(formData.animationStyle);
+      let flow = getElementMotion(formData.element);
 
       p.setup = () => {
-        p.createCanvas(600, 400);
-        p.background(bgColor);
+        p.createCanvas(700, 500);
+        p.angleMode(p.DEGREES);
+        p.background(emotionColor);
         p.noFill();
+        p.frameRate(60);
       };
 
       p.draw = () => {
-        p.background(bgColor + "11"); // faint trail effect
+        p.background(emotionColor + "20"); // light trail
+        p.translate(p.width / 2, p.height / 2);
+        angle += motionSpeed;
 
-        traits.forEach((trait, i) => {
-          let x = p.width / 2 + Math.sin(p.frameCount * 0.01 * (i + 1)) * 150;
-          let y = p.height / 2 + Math.cos(p.frameCount * 0.01 * (i + 1)) * 150;
+        for (let i = 0; i < structure.points; i++) {
+          p.push();
+          p.rotate((360 / structure.points) * i + angle);
+          p.translate(structure.radius, 0);
 
-          p.strokeWeight(2);
-          p.stroke(colorBase[i % colorBase.length]);
-          drawTraitShape(p, trait, x, y, i);
-        });
+          let size = 20 + (formData.age || 20);
+          let wobble = Math.sin(p.frameCount * flow.speed) * flow.amplitude;
+
+          p.stroke(colors[i % colors.length]);
+          p.strokeWeight(1 + (formData.age % 6));
+          drawMBTIShape(p, formData.mbti, size + wobble);
+
+          // Draw orbiting symbol
+          if (symbols[i]) {
+            p.fill(255);
+            p.noStroke();
+            p.textSize(20);
+            p.text(symbols[i], 0, -size - 10);
+          }
+
+          p.pop();
+        }
       };
     };
 
-    let canvas = new p5(sketch, containerRef.current);
-    return () => {
-      canvas.remove();
-    };
+    let p5Instance = new p5(sketch, containerRef.current);
+    return () => p5Instance.remove();
   }, [formData]);
 
   return <div ref={containerRef}></div>;
 };
 
-function drawTraitShape(p, trait, x, y, index) {
-  const size = 50 + index * 5;
+// MOTION FUNCTIONS
 
-  switch (trait) {
-    case "Curious":
-      p.ellipse(x, y, size, size);
+const getElementMotion = (element) => {
+  switch (element) {
+    case "Fire": return { speed: 0.5, amplitude: 10 };
+    case "Water": return { speed: 0.2, amplitude: 20 };
+    case "Earth": return { speed: 0.1, amplitude: 5 };
+    case "Air": return { speed: 0.3, amplitude: 15 };
+    case "Void": return { speed: 0.7, amplitude: 30 };
+    default: return { speed: 0.2, amplitude: 10 };
+  }
+};
+
+const getEmotionColor = (emotion) => {
+  switch (emotion) {
+    case "Peace": return "#D0F0F8";
+    case "Sadness": return "#6A8CAF";
+    case "Joy": return "#FFE57F";
+    case "Anxiety": return "#E57373";
+    case "Hope": return "#B2FF59";
+    case "Anger": return "#FF6F00";
+    default: return "#CCCCCC";
+  }
+};
+
+const getMotionSpeed = (style) => {
+  switch (style) {
+    case "Flowy": return 0.5;
+    case "Bouncy": return 2;
+    case "Electric": return 4;
+    case "Rigid": return 0.3;
+    case "Chaotic": return 3;
+    default: return 1;
+  }
+};
+
+const getStructure = (motif) => {
+  switch (motif) {
+    case "Fractals": return { points: 12, radius: 150 };
+    case "Minimalism": return { points: 3, radius: 100 };
+    case "Chaotic": return { points: 20, radius: 180 };
+    case "Sacred Geometry": return { points: 6, radius: 130 };
+    default: return { points: 8, radius: 120 };
+  }
+};
+
+const drawMBTIShape = (p, type, size) => {
+  switch (type) {
+    case "INTJ":
+    case "INFJ":
+      p.ellipse(0, 0, size, size);
       break;
-    case "Empathetic":
+    case "ENTP":
+    case "ENFP":
+      p.rect(-size / 2, -size / 2, size, size);
+      break;
+    case "ISTP":
+    case "ISFP":
+      p.triangle(0, -size, -size, size, size, size);
+      break;
+    case "ESTJ":
+    case "ESFJ":
+      p.arc(0, 0, size, size, 0, 180);
+      break;
+    default:
       p.beginShape();
-      for (let a = 0; a < p.TWO_PI; a += 0.3) {
-        let r = size + 10 * p.sin(a * 5);
-        let sx = x + r * p.cos(a);
-        let sy = y + r * p.sin(a);
-        p.vertex(sx, sy);
+      for (let a = 0; a < 360; a += 60) {
+        let r = size;
+        let x = r * Math.cos(a * (Math.PI / 180));
+        let y = r * Math.sin(a * (Math.PI / 180));
+        p.vertex(x, y);
       }
       p.endShape(p.CLOSE);
-      break;
-    case "Analytical":
-      p.rect(x - size / 2, y - size / 2, size, size);
-      break;
-    case "Adventurous":
-      p.triangle(x, y - size, x - size, y + size, x + size, y + size);
-      break;
-    case "Creative":
-      p.line(x - size, y - size, x + size, y + size);
-      break;
-    case "Grounded":
-      p.rect(x, y, size / 2, size / 2);
-      break;
-    case "Ambitious":
-      p.arc(x, y, size, size, 0, p.PI);
-      break;
-    default:
-      p.point(x, y);
   }
-}
-
-function getColorFromInterest(interestText) {
-  const text = interestText.toLowerCase();
-  const colors = [];
-
-  if (text.includes("nature")) colors.push("#4CAF50");
-  if (text.includes("music")) colors.push("#FF4081");
-  if (text.includes("tech")) colors.push("#00BCD4");
-  if (text.includes("art")) colors.push("#FFC107");
-  if (text.includes("space")) colors.push("#673AB7");
-  if (text.includes("bars")) colors.push("#B01CFF");
-
-  // fallback if no match
-  if (colors.length === 0) {
-    colors.push("#2196F3", "#E91E63", "#009688");
-  }
-
-  return colors;
-}
-
-function getBackgroundFromEmotion(emotion) {
-  switch (emotion) {
-    case "Calm":
-      return "#D0F0F8";
-    case "Energetic":
-      return "#FFF176";
-    case "Anxious":
-      return "#E57373";
-    case "Inspired":
-      return "#CE93D8";
-    case "Melancholic":
-      return "#90A4AE";
-    default:
-      return "#FFFFFF";
-  }
-}
+};
 
 export default DNAVisualizer;

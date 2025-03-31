@@ -86,6 +86,7 @@ function getColorFromInterest(interestText) {
   if (text.includes("tech")) colors.push("#00BCD4");
   if (text.includes("art")) colors.push("#FFC107");
   if (text.includes("space")) colors.push("#673AB7");
+  if (text.includes("bars")) colors.push("#B01CFF");
 
   // fallback if no match
   if (colors.length === 0) {

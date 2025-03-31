@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import UserInputForm from "./components/UserInputForm";
+import MultiStepDNAForm from "./components/MultiStepDNAForm";
 import DNAVisualizer from "./components/DNAVisualizer";
 
 function App() {
@@ -12,10 +12,10 @@ function App() {
   return (
     <div className="app">
       {!formData ? (
-        <UserInputForm onSubmit={handleFormSubmit} />
+  <MultiStepDNAForm onComplete={handleFormSubmit} />
       ) : (
         <div>
-          <h2>Here’s Your Digital DNA, {formData.name || "Explorer"} ✨</h2>
+          <h2>Your DNA is forming, {formData.name || "Wanderer"} 🧬</h2>
           <DNAVisualizer formData={formData} />
         </div>
       )}

@@ -1,13 +1,12 @@
 import React, { useState } from "react";
 import UserInputForm from "./components/UserInputForm";
+import DNAVisualizer from "./components/DNAVisualizer";
 
 function App() {
   const [formData, setFormData] = useState(null);
 
   const handleFormSubmit = (data) => {
     setFormData(data);
-    console.log("User submitted:", data);
-    // Next we'll generate DNA from this!
   };
 
   return (
@@ -16,8 +15,8 @@ function App() {
         <UserInputForm onSubmit={handleFormSubmit} />
       ) : (
         <div>
-          <h2>Your DNA is being generated...</h2>
-          {/* We'll show the visual generator here in next step */}
+          <h2>Here’s Your Digital DNA, {formData.name || "Explorer"} ✨</h2>
+          <DNAVisualizer formData={formData} />
         </div>
       )}
     </div>

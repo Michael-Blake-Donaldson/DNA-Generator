@@ -11,6 +11,7 @@ const DNAVisualizer = ({ formData }) => {
       let colors = formData.colors || ["#ffffff", "#888888", "#000000"];
       let emotionColor = getEmotionColor(formData.emotion);
       let structure = getStructure(formData.motif);
+      if (!structure || !structure.points) structure = { points: 8, radius: 120 };
       let motionSpeed = getMotionSpeed(formData.animationStyle);
       let flow = getElementMotion(formData.element);
 
@@ -23,7 +24,7 @@ const DNAVisualizer = ({ formData }) => {
       };
 
       p.draw = () => {
-        p.background(emotionColor + "20"); // light trail
+        p.background(emotionColor + "20");
         p.translate(p.width / 2, p.height / 2);
         angle += motionSpeed;
 
@@ -35,11 +36,11 @@ const DNAVisualizer = ({ formData }) => {
           let size = 20 + (formData.age || 20);
           let wobble = Math.sin(p.frameCount * flow.speed) * flow.amplitude;
 
-          p.stroke(colors[i % colors.length]);
+          let color = colors[i % colors.length] || "#ffffff";
+          p.stroke(color);
           p.strokeWeight(1 + (formData.age % 6));
-          drawMBTIShape(p, formData.mbti, size + wobble);
+          drawMBTIShape(p, formData.mbti || "INFP", size + wobble);
 
-          // Draw orbiting symbol
           if (symbols[i]) {
             p.fill(255);
             p.noStroke();
@@ -59,48 +60,46 @@ const DNAVisualizer = ({ formData }) => {
   return <div ref={containerRef}></div>;
 };
 
-// MOTION FUNCTIONS
-
 const getElementMotion = (element) => {
-  switch (element) {
-    case "Fire": return { speed: 0.5, amplitude: 10 };
-    case "Water": return { speed: 0.2, amplitude: 20 };
-    case "Earth": return { speed: 0.1, amplitude: 5 };
-    case "Air": return { speed: 0.3, amplitude: 15 };
-    case "Void": return { speed: 0.7, amplitude: 30 };
+  switch ((element || "").toLowerCase()) {
+    case "fire": return { speed: 0.5, amplitude: 10 };
+    case "water": return { speed: 0.2, amplitude: 20 };
+    case "earth": return { speed: 0.1, amplitude: 5 };
+    case "air": return { speed: 0.3, amplitude: 15 };
+    case "void": return { speed: 0.7, amplitude: 30 };
     default: return { speed: 0.2, amplitude: 10 };
   }
 };
 
 const getEmotionColor = (emotion) => {
-  switch (emotion) {
-    case "Peace": return "#D0F0F8";
-    case "Sadness": return "#6A8CAF";
-    case "Joy": return "#FFE57F";
-    case "Anxiety": return "#E57373";
-    case "Hope": return "#B2FF59";
-    case "Anger": return "#FF6F00";
+  switch ((emotion || "").toLowerCase()) {
+    case "peace": return "#D0F0F8";
+    case "sadness": return "#6A8CAF";
+    case "joy": return "#FFE57F";
+    case "anxiety": return "#E57373";
+    case "hope": return "#B2FF59";
+    case "anger": return "#FF6F00";
     default: return "#CCCCCC";
   }
 };
 
 const getMotionSpeed = (style) => {
-  switch (style) {
-    case "Flowy": return 0.5;
-    case "Bouncy": return 2;
-    case "Electric": return 4;
-    case "Rigid": return 0.3;
-    case "Chaotic": return 3;
+  switch ((style || "").toLowerCase()) {
+    case "flowy": return 0.5;
+    case "bouncy": return 2;
+    case "electric": return 4;
+    case "rigid": return 0.3;
+    case "chaotic": return 3;
     default: return 1;
   }
 };
 
 const getStructure = (motif) => {
-  switch (motif) {
-    case "Fractals": return { points: 12, radius: 150 };
-    case "Minimalism": return { points: 3, radius: 100 };
-    case "Chaotic": return { points: 20, radius: 180 };
-    case "Sacred Geometry": return { points: 6, radius: 130 };
+  switch ((motif || "").toLowerCase()) {
+    case "fractals": return { points: 12, radius: 150 };
+    case "minimalism": return { points: 3, radius: 100 };
+    case "chaotic": return { points: 20, radius: 180 };
+    case "sacred geometry": return { points: 6, radius: 130 };
     default: return { points: 8, radius: 120 };
   }
 };
@@ -124,14 +123,8 @@ const drawMBTIShape = (p, type, size) => {
       p.arc(0, 0, size, size, 0, 180);
       break;
     default:
-      p.beginShape();
-      for (let a = 0; a < 360; a += 60) {
-        let r = size;
-        let x = r * Math.cos(a * (Math.PI / 180));
-        let y = r * Math.sin(a * (Math.PI / 180));
-        p.vertex(x, y);
-      }
-      p.endShape(p.CLOSE);
+      p.ellipse(0, 0, size * 0.8, size * 0.8);
+      break;
   }
 };
 
